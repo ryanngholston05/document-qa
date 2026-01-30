@@ -1,10 +1,23 @@
 import streamlit as st
 from openai import OpenAI
 
+
 # Show title and description.
 st.title("Lab 2")
 st.write(
     "Upload a document below and ask a question about it – GPT will answer! "
+)
+
+
+st.sidebar.header("Summary Options")
+
+summary_style = st.sidebar.radio(
+    "Choose a summary format:",
+    (
+        "100 words",
+        "2 connecting paragraphs",
+        "5 bullet points",
+    ),
 )
 
 # Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it

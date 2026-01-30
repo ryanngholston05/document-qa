@@ -84,7 +84,15 @@ try:
                 "role": "user",
                 "content": f"{instruction}\n\nDOCUMENT:\n{document}",
             },
-        ]   
+             ] 
+        stream = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            stream=True,
+        )
+        st.subheader("Your summary")
+        st.write_stream(stream)
+         
 
 except Exception as e:
     st.error(f"Error connecting to OpenAI: {str(e)}", icon="❌")

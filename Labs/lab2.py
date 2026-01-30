@@ -35,6 +35,10 @@ except KeyError:
     st.stop()
 
 
+
+
+
+
 try:
     # Create OpenAI client using secret key
     client = OpenAI(api_key=openai_api_key)
@@ -48,31 +52,39 @@ try:
         "Upload a document (.txt or .md)", type=("txt", "md")
     )
 
-    # Question input
-    question = st.text_area(
-        "Now ask a question about the document!",
-        placeholder="Can you give me a short summary?",
-        disabled=not uploaded_file,
-    )
 
-    if uploaded_file and question:
-        document = uploaded_file.read().decode()
+
+    if summary_style == "100 words":
+        instruction = (
+            "Summarize the document in exactly 100 words. "
+            "Write as one paragraph. Do not include a title."
+        )
+    elif summary_style == "2 connecting paragraphs":
+        instruction = (
+            "Summarize the document in two connected paragraphs. "
+            "Keep the tone clear and professional. Do not use bullet points."
+        )
+    else:  # "5 bullet points"
+        instruction = (
+            "Summarize the document in exactly 5 bullet points. "
+            "Each bullet should be one sentence. Do not include extra bullets."
+        )
+
+    generate = st.button("Generate summary", disabled=not uploaded_file)
+
+    if uploaded_file and generate:
+        document = uploaded_file.read().decode("utf-8", errors="ignore")
 
         messages = [
             {
+                "role": "system",
+                "content": "You are a helpful assistant that summarizes documents accurately and concisely.",
+            },
+            {
                 "role": "user",
-                "content": f"Here's a document:\n{document}\n\n---\n\n{question}",
-            }
-        ]
-
-        # Stream response
-        stream = client.chat.completions.create(
-            model="gpt-5-nano",
-            messages=messages,
-            stream=True,
-        )
-
-        st.write_stream(stream)
+                "content": f"{instruction}\n\nDOCUMENT:\n{document}",
+            },
+        ]   
 
 except Exception as e:
     st.error(f"Error connecting to OpenAI: {str(e)}", icon="❌")

@@ -23,7 +23,6 @@ summary_style = st.sidebar.radio(
 use_advanced = st.sidebar.checkbox("Use advanced model", value=False)
 model = "gpt-5-mini" if use_advanced else "gpt-5-nano"
 
-st.sidebar.caption(f"Model selected: **{model}**")
 
 # Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
 # via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management

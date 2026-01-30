@@ -1,5 +1,19 @@
 import streamlit as st
 from openai import OpenAI
+import pdfplumber
+
+def read_pdf(uploaded_file):
+    text = ""
+
+    with pdfplumber.open(uploaded_file) as pdf:
+        for page in pdf.pages:
+            page_text = page.extract_text()
+            if page_text:
+                text += page_text
+
+    return text
+
+
 
 
 # Show title and description.
@@ -49,7 +63,7 @@ try:
 
     # File uploader
     uploaded_file = st.file_uploader(
-        "Upload a document (.txt or .md)", type=("txt", "md")
+        "Upload a document (.txt or .pdf)", type=("txt", "pdf")
     )
 
 
@@ -73,8 +87,17 @@ try:
     generate = st.button("Generate summary", disabled=not uploaded_file)
 
     if uploaded_file and generate:
-        document = uploaded_file.read().decode("utf-8", errors="ignore")
+         # Process the uploaded file (txt or pdf)
+        file_extension = uploaded_file.name.split('.')[-1].lower()
 
+        if file_extension == 'txt':
+            document = uploaded_file.read().decode("utf-8", errors="ignore")
+        elif file_extension == 'pdf':
+            document = read_pdf(uploaded_file)
+        else:
+            st.error("Unsupported file type.")
+            st.stop()
+            
         messages = [
             {
                 "role": "system",

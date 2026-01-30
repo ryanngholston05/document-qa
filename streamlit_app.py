@@ -3,17 +3,14 @@ import streamlit as st
 st.set_page_config(page_title="Labs", page_icon="🧪", layout="centered")
 
 def home():
-    st.title("🧪 Lab Application (Landing Page)")
-    st.write("Welcome! Use the navigation to open Lab 1 or Lab 2.")
-    st.divider()
-    st.info("Tip: Your API key is loaded from Streamlit secrets in the lab pages.", icon="🔐")
-
+    st.title("Ryann's IST488 Class Work")
+    st.write("Welcome! Use sidebar to navigate labs")
 # Pages
-home_page = st.Page(home, title="Home", icon="🏠", default=True)
-lab1_page  = st.Page("Labs/lab1.py", title="Lab 1", icon="1️⃣")
-lab2_page  = st.Page("Labs/lab2.py", title="Lab 2", icon="2️⃣")
+home_page = st.Page(home, title="Home", default=True)
+lab1_page  = st.Page("Labs/lab1.py", title="Lab 1")
+lab2_page  = st.Page("Labs/lab2.py", title="Lab 2")
 
-# Navigation (Home is default because default=True)
+# Navigation
 pg = st.navigation([home_page, lab1_page, lab2_page])
 pg.run()
 

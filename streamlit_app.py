@@ -3,15 +3,16 @@ import streamlit as st
 st.set_page_config(page_title="Labs", page_icon="🧪", layout="centered")
 
 def home():
-    st.title("Ryann's IST488 Class Work")
+    st.title("Ryann's IST488 Lab Work")
     st.write("Welcome! Use sidebar to navigate labs")
 # Pages
 home_page = st.Page(home, title="Home", default=True)
 lab1_page  = st.Page("Labs/lab1.py", title="Lab 1")
 lab2_page  = st.Page("Labs/lab2.py", title="Lab 2")
+lab3_page  = st.Page("Labs/lab3.py", title="Lab 3")
 
 # Navigation
-pg = st.navigation([home_page, lab1_page, lab2_page])
+pg = st.navigation([home_page, lab1_page, lab2_page, lab3_page])
 pg.run()
 
 

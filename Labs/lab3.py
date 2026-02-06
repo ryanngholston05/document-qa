@@ -36,7 +36,7 @@ def keep_last_n_user_turns(messages, n_user_turns=2, keep_first_assistant=True):
 
 
 
-st.title("My Lab3 question question")
+st.title("My Lab3 question answering chatbot")
 openAI_Model = st.sidebar.selectbox("Which model?",
                                     ("mini", "regular"))
 if openAI_Model == "mini":

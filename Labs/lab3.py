@@ -1,16 +1,41 @@
 import streamlit as st
 from openai import OpenAI
 
+SYSTEM_PROMPT = """
+You are a helpful chatbot for a student.
+Explain things so a 10-year-old can understand.
+Use short sentences and simple words.
+After you answer, ALWAYS ask: "Do you want more info?"
+If the user says "Yes" (or anything similar like "yeah", "sure", "please"), give more info and ask again.
+If the user says "No" (or anything similar like "nope", "no thanks"), ask what you can help with next.
+
+Keep following this pattern for every interaction.
+"""
+
+
+
 def keep_last_n_user_turns(messages, n_user_turns=2, keep_first_assistant=True):
+
+    """
+    Keep only the last n user turns in the conversation.
+    Always preserves the system message.
+    Optionally preserves the first assistant message.
+    """
 
     if not messages:
         return messages
 
     preserved = []
     start_idx = 0
-    if keep_first_assistant and messages[0]["role"] == "assistant":
+
+    if messages[0]["role"] == "system":
         preserved = [messages[0]]
         start_idx = 1
+
+    if keep_first_assistant and start_idx < len(messages) and messages[start_idx]["role"] == "assistant":
+        preserved.append(messages[start_idx])
+        start_idx += 1
+
 
     # Find indices of user messages
     user_idxs = [i for i in range(start_idx, len(messages)) if messages[i]["role"] == "user"]
@@ -51,12 +76,15 @@ if 'client' not in st.session_state:
     st.session_state.client = OpenAI(api_key=api_key)
 
 if "messages" not in st.session_state:
-    st.session_state["messages"] = \
-    [{"role": "assistant", "content": "How can I help you?"}]
+    st.session_state["messages"] = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "assistant", "content": "Hi! What question do you have?"}
+    ]
 
 for msg in st.session_state.messages:
-    chat_msg = st.chat_message(msg["role"])
-    chat_msg.write(msg["content"])
+    if msg["role"] != "system":  # Don't display system message
+        chat_msg = st.chat_message(msg["role"])
+        chat_msg.write(msg["content"])
 
 if prompt:= st.chat_input("What is up?"):
     st.session_state.messages.append({"role": "user", "content": prompt})

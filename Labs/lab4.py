@@ -206,13 +206,13 @@ if prompt:= st.chat_input("What is up?"):
     # Create enhanced prompt with RAG context
     rag_prompt = f"""Based on the following course materials:
 
-    {relevant_docs}
+{relevant_docs}
 
 
 
-    User question: {prompt}
+User question: {prompt}
 
-    Please answer the question using the information from the course materials above. If you use information from these materials, mention that it comes from the course content."""
+Please answer the question using the information from the course materials above. If you use information from these materials, mention that it comes from the course content."""
 
     # Replace the user's prompt with the RAG-enhanced version
     st.session_state.messages[-1]["content"] = rag_prompt

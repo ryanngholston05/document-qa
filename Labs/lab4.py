@@ -97,7 +97,7 @@ if 'openai_client' not in st.session_state:
 
 # Load PDFs to collection (only once)
 if 'Lab4_VectorDB' not in st.session_state:
-    load_pdfs_to_collection('../Lab-04-Data/', collection)
+    load_pdfs_to_collection('Lab-04-Data/', collection)
     st.session_state.Lab4_VectorDB = collection
 else:
     collection = st.session_state.Lab4_VectorDB

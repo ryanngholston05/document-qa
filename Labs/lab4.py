@@ -15,7 +15,7 @@ If the course materials don't contain the answer, you can say so and offer gener
 """
 
 __import__('pysqlite3')
-sys.modules['sqlite'] = sys.modules.pop('pysqlite3')
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
 chroma_client = chromadb.PersistentClient(path='./ChromaDB_for_Lab')
 collection = chroma_client.get_or_create_collection('Lab4collection')
@@ -59,7 +59,7 @@ def add_to_collection(collection, text, file_name):
 
     collection.add(
         documents=[text],
-        ids=file_name,
+        ids=[file_name],
         embeddings=[embedding]
     )
 
@@ -97,7 +97,7 @@ if 'openai_client' not in st.session_state:
 
 # Load PDFs to collection (only once)
 if 'Lab4_VectorDB' not in st.session_state:
-    load_pdfs_to_collection('./Lab-04-Data/', collection)
+    load_pdfs_to_collection('../Lab-04-Data/', collection)
     st.session_state.Lab4_VectorDB = collection
 else:
     collection = st.session_state.Lab4_VectorDB

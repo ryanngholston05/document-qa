@@ -66,7 +66,7 @@ print(get_current_weather("Lima, Peru", api_key))
 st.title("What Should I Wear Today?")
 
 client = OpenAI(api_key=st.secrets["OPENAI_KEY"])
-weather_api_key = st.secrets["OPENWEATHER_KEY"]
+weather_api_key = st.secrets["WEATHER_KEY"]
 
 city = st.text_input("Enter a city:")
 

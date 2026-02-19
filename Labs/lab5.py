@@ -1,10 +1,36 @@
 import streamlit as st
 from openai import OpenAI
 import requests
+import json
 
 import requests
 
-api_key = api_key = st.secrets["WEATHER_KEY"]
+
+#TOOL
+weather_tool = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_current_weather",
+            "description": "Get current weather for a given location",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "City, State, Country"
+                    }
+                },
+                "required": ["location"]
+            }
+        }
+    }
+]
+
+#ASSIGNING API KEYS TO VARIABLES
+client = OpenAI(api_key=st.secrets["OPENAI_KEY"])
+api_key = st.secrets["WEATHER_KEY"]
+
 
 def get_current_weather(location, api_key, units='imperial'):
     url = (
@@ -31,8 +57,56 @@ def get_current_weather(location, api_key, units='imperial'):
         "description": data['weather'][0]['description']
     }
 
+#TESTING KEY
 print(get_current_weather("Syracuse, NY, US", api_key))
 print(get_current_weather("Lima, Peru", api_key))
 
+
+#UI FOR BOT
+st.title("What Should I Wear Today?")
+
+client = OpenAI(api_key=st.secrets["OPENAI_KEY"])
+weather_api_key = st.secrets["OPENWEATHER_KEY"]
+
+city = st.text_input("Enter a city:")
+
+
+if city:
+    messages = [
+        {"role": "user", "content": f"What should I wear in {city} today?"}
+    ]
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=messages,
+        tools=weather_tool,
+        tool_choice="auto"
+    )
+
+tool_calls = response.choices[0].message.tool_calls
+
+if tool_calls:
+    location = json.loads(tool_calls[0].function.arguments)["location"]
+    weather_data = get_current_weather(location, weather_api_key)
+    final_response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"""
+                    The current weather in {weather_data['location']} is:
+                    Temperature: {weather_data['temperature']}°F
+                    Feels like: {weather_data['feels_like']}°F
+                    Description: {weather_data['description']}
+                    Humidity: {weather_data['humidity']}%
+
+                    What clothes should I wear today?
+                    Suggest appropriate outdoor activities.
+                    """
+                }
+            ]
+        )
+
+st.write(final_response.choices[0].message.content)
 
 

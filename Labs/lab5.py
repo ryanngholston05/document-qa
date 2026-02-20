@@ -58,8 +58,8 @@ def get_current_weather(location, api_key, units='imperial'):
     }
 
 #TESTING KEY
-print(get_current_weather("Syracuse, NY, US", api_key))
-print(get_current_weather("Lima, Peru", api_key))
+# print(get_current_weather("Syracuse, NY, US", api_key))
+# print(get_current_weather("Lima, Peru", api_key))
 
 
 #UI FOR BOT
@@ -83,30 +83,33 @@ if city:
         tool_choice="auto"
     )
 
-tool_calls = response.choices[0].message.tool_calls
+    tool_calls = response.choices[0].message.tool_calls
 
-if tool_calls:
-    location = json.loads(tool_calls[0].function.arguments)["location"]
-    weather_data = get_current_weather(location, weather_api_key)
-    final_response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "user",
-                    "content": f"""
-                    The current weather in {weather_data['location']} is:
-                    Temperature: {weather_data['temperature']}°F
-                    Feels like: {weather_data['feels_like']}°F
-                    Description: {weather_data['description']}
-                    Humidity: {weather_data['humidity']}%
+    if tool_calls:
+        location = json.loads(tool_calls[0].function.arguments)["location"]
+        weather_data = get_current_weather(location, weather_api_key)
+        final_response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": f"""
+                        The current weather in {weather_data['location']} is:
+                        Temperature: {weather_data['temperature']}°F
+                        Feels like: {weather_data['feels_like']}°F
+                        Description: {weather_data['description']}
+                        Humidity: {weather_data['humidity']}%
 
-                    What clothes should I wear today?
-                    Suggest appropriate outdoor activities.
-                    """
-                }
-            ]
-        )
+                        What clothes should I wear today?
+                        Suggest appropriate outdoor activities.
+                        """
+                    }
+                ]
+            )
 
-st.write(final_response.choices[0].message.content)
+    st.write(final_response.choices[0].message.content)
+
+else:
+    st.write("Enter a city to get clothing + activity suggestions.")
 
 

@@ -4,3 +4,5 @@ pdfplumber
 chromadb
 pyPDF2
 pysqlite3-binary
+
+requests

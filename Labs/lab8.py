@@ -8,16 +8,16 @@ client = OpenAI(api_key=st.secrets["OPENAI_KEY"])
 if "url_response" not in st.session_state:
     st.session_state.url_response = None
 
-if "upload_response" not in st.session_state:        # moved up to top level
+if "upload_response" not in st.session_state:    
     st.session_state.upload_response = None
 
 st.header("Image URL Input")
 st.write("Input your image url here")
 
-url = st.text_input("Image URL", placeholder="https://...")
+url = st.text_input("Image URL")
 st.caption("Ensure link leads directly to the image and not a webpage with images on it.")
 
-if st.button("Generate Caption for Inputted URL") and url:
+if st.button("Generate Caption for URL") and url:
     response = client.chat.completions.create(
         model="gpt-4.1-mini",
         max_tokens=1024,
@@ -36,7 +36,7 @@ if st.button("Generate Caption for Inputted URL") and url:
     )
     st.session_state.url_response = response
 
-if st.session_state.url_response:                    # moved outside button block
+if st.session_state.url_response:                  
     st.image(url)
     st.write(st.session_state.url_response.choices[0].message.content)
 
@@ -68,6 +68,6 @@ if st.button("Generate Caption for Uploaded Image") and uploaded:
     )
     st.session_state.upload_response = response
 
-if st.session_state.upload_response:                 # added missing display block
+if st.session_state.upload_response:                
     st.image(uploaded)
     st.write(st.session_state.upload_response.choices[0].message.content)

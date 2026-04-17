@@ -300,3 +300,175 @@ if st.button(" Run Single-Agent Comparison"):
         st.subheader("Single-Agent Response (No Tools)")
         st.markdown(single_result.content)
  
+
+st.divider()
+st.subheader("Chatbot Mode (MessagesState & StateGraph)")
+st.write(
+    "This chatbot uses a hand-built **StateGraph** with `MessagesState`. "
+    "The supervisor routes each message to the right specialist agent, "
+    "then a synthesizer produces the final response."
+)
+ 
+# 6A
+
+def supervisor_node(state: MessagesState):
+    """Reads the conversation and outputs a routing decision word."""
+    messages = state['messages']
+    routing_prompt = (
+        "You are a router. Read the user's latest message and reply with exactly one word:\n"
+        "- 'research'   → if they ask about a destination (highlights, culture, weather, tips)\n"
+        "- 'budget'     → if they ask about cost, price, or budget\n"
+        "- 'itinerary'  → if they ask for a schedule or day-by-day plan\n"
+        "- 'all'        → if they want a full trip plan covering all three topics\n"
+        "- 'chat'       → for greetings, thanks, or anything else\n\n"
+        "Reply with ONE word only."
+    )
+    response = supervisor_llm.invoke(
+        [{"role": "system", "content": routing_prompt}] + 
+        [{"role": m.type if hasattr(m, 'type') else 'user', "content": m.content} for m in messages]
+    )
+    return {'messages': [response]}
+ 
+ 
+def research_node(state: MessagesState):
+    """Invokes the research_agent to look up destination info."""
+    messages = state['messages']
+    # Find the original user message (skip the routing decision)
+    user_messages = [m for m in messages if getattr(m, 'type', '') == 'human']
+    query = user_messages[-1].content if user_messages else messages[0].content
+    result = research_agent.invoke({'messages': [{'role': 'user', 'content': query}]})
+    response_content = result['messages'][-1].content
+    return {'messages': [{"role": "assistant", "content": response_content}]}
+ 
+ 
+def budget_node(state: MessagesState):
+    """Invokes the budget_agent to estimate trip costs."""
+    messages = state['messages']
+    user_messages = [m for m in messages if getattr(m, 'type', '') == 'human']
+    query = user_messages[-1].content if user_messages else messages[0].content
+    result = budget_agent.invoke({'messages': [{'role': 'user', 'content': query}]})
+    response_content = result['messages'][-1].content
+    return {'messages': [{"role": "assistant", "content": response_content}]}
+ 
+ 
+def itinerary_node(state: MessagesState):
+    """Invokes the itinerary_agent to build a day-by-day schedule."""
+    messages = state['messages']
+    user_messages = [m for m in messages if getattr(m, 'type', '') == 'human']
+    query = user_messages[-1].content if user_messages else messages[0].content
+    result = itinerary_agent.invoke({'messages': [{'role': 'user', 'content': query}]})
+    response_content = result['messages'][-1].content
+    return {'messages': [{"role": "assistant", "content": response_content}]}
+ 
+ 
+def run_all_agents(state: MessagesState):
+    """Sequentially invokes all three agents and combines their outputs."""
+    messages = state['messages']
+    user_messages = [m for m in messages if getattr(m, 'type', '') == 'human']
+    query = user_messages[-1].content if user_messages else messages[0].content
+ 
+    research_result = research_agent.invoke({'messages': [{'role': 'user', 'content': query}]})
+    budget_result = budget_agent.invoke({'messages': [{'role': 'user', 'content': query}]})
+    itinerary_result = itinerary_agent.invoke({'messages': [{'role': 'user', 'content': query}]})
+ 
+    combined = (
+        "### 🔍 Research Agent\n" + research_result['messages'][-1].content + "\n\n" +
+        "### 💰 Budget Agent\n" + budget_result['messages'][-1].content + "\n\n" +
+        "### 🗓️ Itinerary Agent\n" + itinerary_result['messages'][-1].content
+    )
+    return {'messages': [{"role": "assistant", "content": combined}]}
+ 
+ 
+def synthesizer_node(state: MessagesState):
+    """Produces a final well-organized response from all agent outputs."""
+    messages = state['messages']
+    synth_prompt = (
+        "You are a travel planning assistant. Based on the conversation so far, "
+        "provide a helpful, friendly, and well-organized response. "
+        "If agent data is available, summarize it clearly. "
+        "If it's just a greeting or general chat, respond conversationally."
+    )
+    response = supervisor_llm.invoke(
+        [{"role": "system", "content": synth_prompt}] +
+        [{"role": m.type if hasattr(m, 'type') else 'user', "content": m.content} for m in messages]
+    )
+    return {'messages': [response]}
+ 
+ 
+# 6B: 
+def route_from_supervisor(state: MessagesState):
+    last_msg = state['messages'][-1].content.strip().lower()
+    if 'research' in last_msg:
+        return 'research'
+    elif 'budget' in last_msg:
+        return 'budget'
+    elif 'itinerary' in last_msg:
+        return 'itinerary'
+    elif 'all' in last_msg:
+        return 'all'
+    else:
+        return 'chat'
+ 
+ 
+#6C
+ 
+chatbot_graph = StateGraph(MessagesState)
+ 
+# Add nodes
+chatbot_graph.add_node('supervisor', supervisor_node)
+chatbot_graph.add_node('research', research_node)
+chatbot_graph.add_node('budget', budget_node)
+chatbot_graph.add_node('itinerary', itinerary_node)
+chatbot_graph.add_node('all_agents', run_all_agents)
+chatbot_graph.add_node('synthesizer', synthesizer_node)
+ 
+# Add edges
+chatbot_graph.add_edge(START, 'supervisor')
+chatbot_graph.add_conditional_edges(
+    'supervisor',
+    route_from_supervisor,
+    {
+        'research': 'research',
+        'budget': 'budget',
+        'itinerary': 'itinerary',
+        'all': 'all_agents',
+        'chat': 'synthesizer',
+    },
+)
+chatbot_graph.add_edge('research', 'synthesizer')
+chatbot_graph.add_edge('budget', 'synthesizer')
+chatbot_graph.add_edge('itinerary', 'synthesizer')
+chatbot_graph.add_edge('all_agents', 'synthesizer')
+chatbot_graph.add_edge('synthesizer', END)
+ 
+chatbot_app = chatbot_graph.compile()
+ 
+ 
+#6D: 
+ 
+# Initialize chat history in session state
+if 'chat_history' not in st.session_state:
+    st.session_state.chat_history = []
+ 
+# Display existing chat history
+for message in st.session_state.chat_history:
+    with st.chat_message(message['role']):
+        st.markdown(message['content'])
+ 
+# Handle new user input
+if user_input := st.chat_input("Ask me about a destination, budget, itinerary, or full trip plan..."):
+    # Display and store user message
+    with st.chat_message("user"):
+        st.markdown(user_input)
+    st.session_state.chat_history.append({"role": "user", "content": user_input})
+ 
+    # Invoke the chatbot graph
+    with st.chat_message("assistant"):
+        with st.spinner("Routing to the right agent..."):
+            chat_result = chatbot_app.invoke({
+                'messages': [{'role': 'user', 'content': user_input}]
+            })
+            response = chat_result['messages'][-1].content
+            st.markdown(response)
+ 
+    st.session_state.chat_history.append({"role": "assistant", "content": response})

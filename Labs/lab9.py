@@ -7,6 +7,14 @@ from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
 from langgraph_supervisor import create_supervisor
 
+from langgraph.graph import StateGraph, START, END
+from langgraph.graph.message import add_messages
+from typing import Annotated
+from typing_extensions import TypedDict
+
+class MessagesState(TypedDict):
+    messages: Annotated[list, add_messages]
+
 
 st.title("Lab 09: Multi-Agent Trip Planner")
 st.write(

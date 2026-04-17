@@ -6,3 +6,9 @@ pyPDF2
 pysqlite3-binary
 
 requests
+
+
+langchain
+langchain-openai
+langgraph
+langgraph-supervisor

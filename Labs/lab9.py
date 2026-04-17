@@ -30,7 +30,8 @@ supervisor_llm = ChatOpenAI(model='gpt-4o-mini', temperature=0)
 
 
 
-with open('travel_data.json', 'r') as f:
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+with open(os.path.join(BASE_DIR, 'travel_data.json'), 'r') as f:
     TRAVEL_DATA = json.load(f)
 
 

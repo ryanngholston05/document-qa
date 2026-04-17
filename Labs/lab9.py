@@ -22,7 +22,7 @@ st.write(
 )
 
 
-os.environ["OPENAI_KEY"] = st.secrets["OPENAI_KEY"]
+os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 
 
 agent_llm = ChatOpenAI(model='gpt-4o-mini', temperature=0)
